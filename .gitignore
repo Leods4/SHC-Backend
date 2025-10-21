@@ -1,0 +1,59 @@
+# Sistema / OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs & editores
+/.idea/
+/.vscode/
+/*.sublime-workspace
+/*.sublime-project
+
+# Dependências
+/vendor/
+/node_modules/
+
+# Logs e caches
+*.log
+npm-debug.log*
+yarn-error.log*
+/storage/*.key
+*.cache
+
+# Arquivos ambiente
+.env
+.env.*.local
+.env.backup
+.env.production
+.env.testing
+
+# Build front-end / assets compilados
+/public/hot
+/public/storage
+/public/build
+/public/mix-manifest.json
+/public/css/
+/public/js/
+/public/assets/
+/public/vendor/
+
+# Laravel específico
+/.phpunit.result.cache
+Homestead.yaml
+Homestead.json
+/.vagrant
+/.fleet
+bootstrap/cache/*
+/storage/framework/cache/*
+/storage/framework/views/*
+/storage/app/*
+/storage/logs/*
+
+# Outros
+/.idea/
+/*.iml
+/*.iws
+/*.ipr
+*.swp
+*.swo
