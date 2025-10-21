@@ -1,3 +1,5 @@
+Documentação da API - Sistema de Horas Complementares (SHC)
+
 1. Visão Geral
 
 API RESTful desenvolvida para ser o backend de um sistema de gerenciamento de atividades complementares. A API oferece uma interface robusta para ser consumida por uma aplicação frontend (ex: React, Vue, Angular), gerenciando usuários, cursos, e o ciclo de vida de certificados.
@@ -106,7 +108,7 @@ Adicionalmente, a variável SANCTUM_STATEFUL_DOMAINS no arquivo .env foi configu
 
 4. Referência da API (Endpoints)
 
-Rotas Públicas
+4.1 Rotas Públicas
 
 POST /api/auth/register
 
@@ -116,9 +118,7 @@ POST /api/auth/login
 
 Autentica um usuário e retorna um token.
 
-Rotas Protegidas (Exigem Bearer Token)
-
-Autenticação
+4.2 Autenticação (Rotas Protegidas)
 
 POST /api/auth/logout
 
@@ -128,7 +128,7 @@ POST /api/auth/refresh
 
 Gera um novo token de acesso.
 
-Usuários
+4.3 Usuários (Rotas Protegidas)
 
 GET /api/usuarios
 
@@ -158,7 +158,7 @@ GET /api/usuarios/{id}/historico
 
 Mostra o histórico de alterações do usuário.
 
-Cursos
+4.4 Cursos (Rotas Protegidas)
 
 GET /api/cursos
 
@@ -180,7 +180,7 @@ DELETE /api/cursos/{id}
 
 Deleta um curso.
 
-Certificados
+4.5 Certificados (Rotas Protegidas)
 
 GET /api/certificados
 
