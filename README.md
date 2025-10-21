@@ -1,293 +1,158 @@
-Documentação da API - Sistema de Horas Complementares (SHC)
+# Sistema de Horas Complementares (SHC) - Backend
 
-1. Visão Geral
+## 1\. Sobre o Projeto
 
-API RESTful desenvolvida para ser o backend de um sistema de gerenciamento de atividades complementares. A API oferece uma interface robusta para ser consumida por uma aplicação frontend (ex: React, Vue, Angular), gerenciando usuários, cursos, e o ciclo de vida de certificados.
+Esta é uma API RESTful desenvolvida em Laravel 12 para ser o backend de um sistema de gerenciamento de atividades complementares.
 
-Framework: Laravel 12
+A API oferece uma interface robusta para ser consumida por uma aplicação frontend (como React, Vue ou Angular), permitindo o gerenciamento de usuários, cursos e todo o ciclo de vida dos certificados de horas complementares.
 
-Banco de Dados: PostgreSQL
+## 2\. Tecnologias Utilizadas
 
-Autenticação: Laravel Sanctum (API Tokens)
+  * **Framework:** Laravel 12
+  * **Banco de Dados:** PostgreSQL
+  * **Autenticação:** Laravel Sanctum (API Tokens)
+  * **Linguagem:** PHP 8.2+
+  * **Gerenciador de Dependências:** Composer
 
-Plataforma de Deploy (Sugerida): Render
+## 3\. Principais Funcionalidades
 
-2. Configuração e Execução Local
+A API implementa diversas regras de negócio e padrões de arquitetura para garantir um sistema robusto e seguro.
 
-Pré-requisitos: PHP 8.2+, Composer, PostgreSQL.
+  * **Autenticação e Autorização:**
+      * Sistema completo de registro, login, logout e renovação de tokens (refresh token) usando Laravel Sanctum.
+      * Todas as rotas de recursos são protegidas pelo middleware `auth:sanctum`.
+      * Uso de *Policies* (ex: `UsuarioPolicy`, `CertificadoPolicy`) para definir regras de negócio granulares sobre quem pode visualizar, criar, atualizar ou deletar recursos.
+  * **Gestão de Certificados e Uploads:**
+      * Endpoint para upload de certificados (`POST /api/certificados`) que processa requisições `multipart/form-data`.
+      * Os arquivos são armazenados com segurança em `storage/app/public/certificados`.
+      * Validação robusta via *FormRequest* (`StoreCertificadoRequest`) que garante que o arquivo seja PDF, tenha no máximo 5MB e que a data de emissão não seja futura.
+  * **Histórico Automático de Alterações (Log de Auditoria):**
+      * Uso de *Model Observers* (`UsuarioObserver`, `CertificadoObserver`) para "escutar" eventos do Eloquent como `created`, `updated` e `deleted`.
+      * O sistema registra automaticamente *quem* realizou a ação (`Auth::id()`) e, em casos de atualização, registra apenas os campos que foram alterados (`getChanges()`).
+  * **Cálculo de Progresso e Filtros:**
+      * Endpoint dedicado (`GET /api/usuarios/{id}/progresso`) que soma todas as `horas_validadas` de certificados com status `APROVADO` de um aluno.
+      * Os endpoints de listagem (ex: `GET /api/certificados`) suportam filtros via *query parameters* (ex: `?status=APROVADO`) para buscas dinâmicas.
+  * **Arquitetura e Integridade de Dados:**
+      * Uso de **PHP Enums** para papéis de usuário, status e categorias de certificados, garantindo a consistência dos dados e evitando "strings mágicas" no código.
+      * Registro centralizado de Policies no `AuthServiceProvider` e de Observers no `AppServiceProvider`.
 
-Clonar o repositório:
+## 4\. Configuração e Execução Local
 
-git clone [https://github.com/Leods4/SHC-Backend.git](https://github.com/Leods4/SHC-Backend.git)
-cd SHC-Backend
+Siga os passos abaixo para configurar e executar o projeto em seu ambiente local.
 
+**Pré-requisitos:**
 
-Instalar dependências:
+  * PHP 8.2+
+  * Composer
+  * PostgreSQL
 
-composer install
+**Passos de Instalação:**
 
+1.  Clone o repositório:
 
-Configurar o ambiente:
+    ```bash
+    git clone https://github.com/Leods4/SHC-Backend.git
+    cd SHC-Backend
+    ```
 
-Copie o arquivo de exemplo: cp .env.example .env
+2.  Instale as dependências do Composer:
 
-Abra o arquivo .env e configure as variáveis do banco de dados (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
+    ```bash
+    composer install
+    ```
 
-Gerar a chave da aplicação:
+3.  Configure o arquivo de ambiente:
 
-php artisan key:generate
+    ```bash
+    cp .env.example .env
+    ```
 
+4.  Abra o arquivo `.env` e configure suas variáveis de banco de dados (PostgreSQL):
 
-Executar as migrações do banco de dados:
+    ```ini
+    DB_HOST=127.0.0.1
+    DB_PORT=5432
+    DB_DATABASE=sua_db
+    DB_USERNAME=seu_usuario
+    DB_PASSWORD=sua_senha
+    ```
 
-php artisan migrate
+5.  Gere a chave da aplicação:
 
+    ```bash
+    php artisan key:generate
+    ```
 
-Criar o link de armazenamento (ESSENCIAL para uploads):
-Este comando torna os arquivos enviados (certificados) acessíveis publicamente.
+6.  Execute as migrações do banco de dados:
 
-php artisan storage:link
+    ```bash
+    php artisan migrate
+    ```
 
+7.  **ESSENCIAL:** Crie o link simbólico para o armazenamento. Isso torna os arquivos de upload (certificados) acessíveis publicamente:
 
-Iniciar o servidor local:
+    ```bash
+    php artisan storage:link
+    ```
 
-php artisan serve
+8.  Inicie o servidor local:
 
-
-A API estará disponível em http://localhost:8000.
-
-3. Funcionalidades e Detalhes de Implementação
-
-Esta seção detalha as principais funcionalidades e como as regras de negócio foram implementadas.
-
-3.1 🔐 Autenticação e Autorização
-
-Autenticação (AuthController): Implementa registro, login, logout e renovação de tokens (refreshToken) utilizando Laravel Sanctum. As rotas são protegidas pelo middleware auth:sanctum.
-
-Autorização (Policies): A especificação pedia para "restringir o acesso... utilizando Policies". A implementação real definiu as seguintes regras de negócio em classes Policy dedicadas:
-
-UsuarioPolicy.php: Define que um usuário pode editar a si mesmo, mas apenas um ADMINISTRADOR pode deletar outros usuários. SECRETARIA e COORDENADOR possuem permissões de visualização ampliadas.
-
-CursoPolicy.php: Apenas ADMINISTRADOR e SECRETARIA podem criar ou deletar cursos, enquanto COORDENADOR pode atualizá-los.
-
-CertificadoPolicy.php: Contém a lógica mais complexa. Apenas ALUNOS podem criar certificados, e só podem editá-los se o status for ENTREGUE. A avaliação é restrita a COORDENADOR, SECRETARIA e ADMINISTRADOR.
-
-3.2 📦 Gestão de Certificados e Uploads
-
-Uploads (CertificadoController): A rota POST /api/certificados processa requisições multipart/form-data para o upload de arquivos. O arquivo é armazenado em storage/app/public/certificados e o caminho é salvo no banco de dados.
-
-Validação (StoreCertificadoRequest): A especificação pedia "Validação... via classes FormRequest". A implementação garante que o arquivo seja do tipo PDF e tenha um tamanho máximo de 5MB. Também impede que certificados sejam submetidos com data futura.
-
-3.3 🧾 Histórico Automático de Alterações
-
-Rastreamento (Observers): A especificação pedia para "utilizar Model Observers". Foram criados UsuarioObserver e CertificadoObserver para "escutar" eventos do Eloquent (created, updated, deleted).
-
-Como Funciona: No evento updated, o observer utiliza getChanges() para registrar apenas os campos que foram alterados. No evento created, o estado completo do novo registro é salvo. Em todos os casos, Auth::id() é usado para registrar quem realizou a ação, criando um log de auditoria completo e automático.
-
-3.4 🧮 Cálculo de Horas e Filtros
-
-Cálculo de Progresso (UsuarioController@showProgresso): Endpoint dedicado que soma as horas_validadas de todos os certificados APROVADOS de um aluno e retorna o total, junto com as horas necessárias do curso.
-
-Filtros e Buscas (index methods): Os métodos index dos controladores (ex: CertificadoController) suportam filtros via query parameters, como ?status=APROVADO, permitindo buscas dinâmicas na API.
-
-3.5 🏗️ Arquitetura e Componentes de Ligação
-
-Enums (app/Enums): Foram utilizados PHP Enums para garantir a consistência e integridade dos dados para papéis de usuário, status e categorias de certificados. Eles servem como a "fonte da verdade", evitando o uso de strings mágicas no código.
-
-Provedores de Serviço (app/Providers):
-
-AuthServiceProvider.php: Este arquivo é responsável por "registrar" as Policies. É aqui que mapeamos um Modelo (Usuario::class) à sua respectiva Policy (UsuarioPolicy::class), informando ao Laravel como autorizar ações.
-
-AppServiceProvider.php: Este provedor registra os Observers. Ao vincular Usuario::class a UsuarioObserver::class, garantimos que o observer seja acionado automaticamente sempre que um usuário for criado, atualizado ou deletado.
-
-Configuração de CORS e Sanctum:
-
-Para permitir a comunicação com o frontend, o arquivo config/cors.php foi ajustado para permitir a origem do cliente e suportar credenciais (supports_credentials = true).
-
-Adicionalmente, a variável SANCTUM_STATEFUL_DOMAINS no arquivo .env foi configurada para informar ao Sanctum quais domínios frontend podem fazer requisições autenticadas.
-
-4. Referência da API (Endpoints)
-
-4.1 Rotas Públicas
-
-POST /api/auth/register
-
-Registra um novo usuário.
-
-POST /api/auth/login
-
-Autentica um usuário e retorna um token.
-
-4.2 Autenticação (Rotas Protegidas)
-
-POST /api/auth/logout
-
-Faz logout do usuário (revoga o token).
-
-POST /api/auth/refresh
-
-Gera um novo token de acesso.
-
-4.3 Usuários (Rotas Protegidas)
-
-GET /api/usuarios
-
-Lista todos os usuários.
-
-POST /api/usuarios
-
-Cria um novo usuário.
-
-GET /api/usuarios/{id}
-
-Exibe um usuário específico.
-
-PUT /api/usuarios/{id}
-
-Atualiza um usuário.
-
-DELETE /api/usuarios/{id}
-
-Deleta um usuário.
-
-GET /api/usuarios/{id}/progresso
-
-Mostra o progresso de horas do usuário.
-
-GET /api/usuarios/{id}/historico
-
-Mostra o histórico de alterações do usuário.
-
-4.4 Cursos (Rotas Protegidas)
-
-GET /api/cursos
-
-Lista todos os cursos.
-
-POST /api/cursos
-
-Cria um novo curso.
-
-GET /api/cursos/{id}
-
-Exibe um curso específico.
-
-PUT /api/cursos/{id}
-
-Atualiza um curso.
-
-DELETE /api/cursos/{id}
-
-Deleta um curso.
-
-4.5 Certificados (Rotas Protegidas)
-
-GET /api/certificados
-
-Lista certificados (Aluno só vê os seus).
-
-POST /api/certificados
-
-Submete um novo certificado (com upload).
-
-GET /api/certificados/{id}
-
-Exibe um certificado específico.
-
-PUT /api/certificados/{id}
-
-Atualiza um certificado (se ainda não avaliado).
-
-DELETE /api/certificados/{id}
-
-Deleta um certificado (se ainda não avaliado).
-
-PATCH /api/certificados/{id}/avaliar
-
-Avalia (aprova/reprova) um certificado.
-
-GET /api/certificados/{id}/historico
-
-Mostra o histórico de alterações do certificado.
-
-5. Estrutura da Aplicação
-
-5.1 Estrutura de Dados
-
-Enumerações (Tipos pré-definidos)
-
-TipoUsuario (Enum):
-
-ALUNO
-
-COORDENADOR
-
-SECRETARIA
-
-ADMINISTRADOR
-
-StatusCertificado (Enum):
-
-ENTREGUE
-
-APROVADO
-
-REPROVADO
-
-APROVADO_COM_RESSALVAS
-
-CategoriaCertificado (Enum):
-
-CIENTIFICO_ACADEMICA
-
-SOCIOCULTURAL
-
-PRATICA_PROFISSIONAL
-
-Modelos (Entidades Principais)
-
-Usuario
-
-Atributos: id, nome, email, senha (hash), matricula, data_nascimento, tipo, dados_adicionais (JSON), curso_id, fase.
-
-Relacionamentos: curso(), certificados(), cursosCoordenados(), historicoResponsavel().
-
-Curso
-
-Atributos: id, nome, horasNecessarias.
-
-Relacionamentos: alunos(), coordenadores().
-
-Certificado
-
-Atributos: id, usuario_id, categoria, status, carga_horaria_solicitada, horas_validadas, nome_certificado, instituicao, data_emissao, observacao, arquivo.
-
-Relacionamentos: requerente(), historico().
-
-HistoricoAlteracao
-
-Atributos: id, responsavel_id, historicoable_type, historicoable_id, alteracao (JSON), observacao, data_alteracao.
-
-Relacionamentos: responsavel(), historicoable() (polimórfico).
-
-5.2 Componentes e Lógica
-
-Controllers
-
-AuthController: register(), login(), logout(), refreshToken()
-
-UsuarioController: index(), store(), show(), update(), destroy(), showProgresso()
-
-CursoController: index(), store(), show(), update(), destroy()
-
-CertificadoController: index(), store(), show(), update(), destroy(), avaliar()
-
-UsuarioHistoricoController: index()
-
-CertificadoHistoricoController: index()
-
-Observers (Gatilhos de Eventos)
-
-UsuarioObserver: created(), updated()
-
-CertificadoObserver: created(), updated()
+    ```bash
+    php artisan serve
+    ```
+
+A API estará disponível em `http://localhost:8000`.
+
+### Configuração para Frontend (CORS e Sanctum)
+
+Para permitir que sua aplicação frontend consuma esta API:
+
+1.  Ajuste o arquivo `config/cors.php` para permitir a origem do seu cliente (ex: `http://localhost:3000`).
+2.  Adicione o domínio do seu frontend à variável `SANCTUM_STATEFUL_DOMAINS` no seu arquivo `.env` para permitir requisições autenticadas.
+
+## 5\. Referência da API (Endpoints)
+
+A API possui rotas públicas para autenticação e rotas protegidas para o gerenciamento dos recursos.
+
+### Rotas Públicas (Autenticação)
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Registra um novo usuário. |
+| `POST` | `/api/auth/login` | Autentica um usuário e retorna um token. |
+| `POST` | `/api/auth/logout` | Faz logout do usuário (revoga o token). |
+| `POST` | `/api/auth/refresh` | Gera um novo token de acesso. |
+
+### Rotas Protegidas (Usuários)
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/usuarios` | Lista todos os usuários. |
+| `POST` | `/api/usuarios` | Cria um novo usuário. |
+| `GET` | `/api/usuarios/{id}` | Exibe um usuário específico. |
+| `PUT` | `/api/usuarios/{id}` | Atualiza um usuário. |
+| `DELETE` | `/api/usuarios/{id}` | Deleta um usuário. |
+| `GET` | `/api/usuarios/{id}/progresso` | Mostra o progresso de horas do usuário. |
+| `GET` | `/api/usuarios/{id}/historico` | Mostra o histórico de alterações do usuário. |
+
+### Rotas Protegidas (Cursos)
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/cursos` | Lista todos os cursos. |
+| `POST` | `/api/cursos` | Cria um novo curso. |
+| `GET` | `/api/cursos/{id}` | Exibe um curso específico. |
+| `PUT` | `/api/cursos/{id}` | Atualiza um curso. |
+| `DELETE` | `/api/cursos/{id}` | Deleta um curso. |
+
+### Rotas Protegidas (Certificados)
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/api/certificados` | Lista certificados (Aluno só vê os seus). |
+| `POST` | `/api/certificados` | Submete um novo certificado (com upload). |
+| `GET` | `/api/certificados/{id}` | Exibe um certificado específico. |
+| `PUT` | `/api/certificados/{id}` | Atualiza um certificado (se ainda não avaliado). |
+| `DELETE` | `/api/certificados/{id}` | Deleta um certificado (se ainda não avaliado). |
+| `PATCH` | `/api/certificados/{id}/avaliar` | Avalia (aprova/reprova) um certificado. |
+| `GET` | `/api/certificados/{id}/historico` | Mostra o histórico de alterações do certificado. |
