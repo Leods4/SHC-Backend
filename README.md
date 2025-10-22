@@ -156,3 +156,159 @@ A API possui rotas públicas para autenticação e rotas protegidas para o geren
 | `DELETE` | `/api/certificados/{id}` | Deleta um certificado (se ainda não avaliado). |
 | `PATCH` | `/api/certificados/{id}/avaliar` | Avalia (aprova/reprova) um certificado. |
 | `GET` | `/api/certificados/{id}/historico` | Mostra o histórico de alterações do certificado. |
+
+## 5\. Referência da API (Endpoints)
+
+### Enumerações (Tipos pré-definidos)
+
+| TipoUsuario |
+| :--- |
+| ALUNO |
+| COORDENADOR |
+| SECRETARIA |
+| ADMINISTRADOR |
+
+| StatusCertificado |
+| :--- |
+| ENTREGUE |
+| APROVADO |
+| REPROVADO |
+| APROVADO_COM_RESSALVAS |
+
+| CategoriaCertificado |
+| :--- |
+| CIENTIFICO_ACADEMICA |
+| SOCIOCULTURAL |
+| PRATICA_PROFISSIONAL |
+
+---
+
+### Modelos (Entidades Principais)
+
+#### Usuario
+**Atributos:**
+- +id: int  
+- +nome: String  
+- +email: String  
+- +senha: String (hash)  
+- +matricula: String  
+- +data_nascimento: Date  
+- +tipo: TipoUsuario  
+- +dados_adicionais: JSON  
+- +curso_id: int (opcional)  
+- +fase: int (opcional)  
+
+**Métodos/Relacionamentos:**
+- +curso(): Curso (pertence a)  
+- +certificados(): List<Certificado> (requer)  
+- +cursosCoordenados(): List<Curso> (é coordenado por)  
+- +historicoResponsavel(): List<HistoricoAlteracao> (é responsável por)  
+- +calcularHorasValidadas(): int  
+
+---
+
+#### Curso
+**Atributos:**
+- +id: int  
+- +nome: String  
+- +horasNecessarias: int  
+
+**Métodos/Relacionamentos:**
+- +alunos(): List<Usuario> (contém alunos)  
+- +coordenadores(): List<Usuario> (é coordenado por)  
+
+---
+
+#### Certificado
+**Atributos:**
+- +id: int  
+- +usuario_id: int  
+- +categoria: CategoriaCertificado  
+- +status: StatusCertificado  
+- +carga_horaria_solicitada: int  
+- +horas_validadas: int  
+- +nome_certificado: String  
+- +instituicao: String  
+- +data_emissao: Date  
+- +observacao: String  
+- +arquivo: String  
+
+**Métodos/Relacionamentos:**
+- +requerente(): Usuario  
+- +historico(): List<HistoricoAlteracao>  
+
+---
+
+#### HistoricoAlteracao
+**Atributos:**
+- +id: int  
+- +responsavel_id: int  
+- +historicoable_type: String  
+- +historicoable_id: int  
+- +alteracao: JSON  
+- +observacao: String  
+- +data_alteracao: Date  
+
+**Métodos/Relacionamentos:**
+- +responsavel(): Usuario  
+- +historicoable(): morphTo (Relacionamento polimórfico)  
+
+---
+
+2. Diagrama de Componentes (Controllers e Lógica)
+
+### Controller de Autenticação
+**AuthController**
+- +register(RegisterRequest $request)  
+- +login(LoginRequest $request)  
+- +logout(Request $request)  
+- +refreshToken(Request $request)  
+
+---
+
+### Controllers de Recurso (CRUD)
+
+**UsuarioController**
+- +index(Request $request)  
+- +store(StoreUsuarioRequest $request)  
+- +show(Usuario $usuario)  
+- +update(UpdateUsuarioRequest $request, Usuario $usuario)  
+- +destroy(Usuario $usuario)  
+- +showProgresso(Usuario $usuario)  
+
+**CursoController**
+- +index()  
+- +store(StoreCursoRequest $request)  
+- +show(Curso $curso)  
+- +update(UpdateCursoRequest $request, Curso $curso)  
+- +destroy(Curso $curso)  
+
+**CertificadoController**
+- +index(Request $request)  
+- +store(StoreCertificadoRequest $request)  
+- +show(Certificado $certificado)  
+- +update(UpdateCertificadoRequest $request, Certificado $certificado)  
+- +destroy(Certificado $certificado)  
+- +avaliar(AvaliarCertificadoRequest $request, Certificado $certificado)  
+
+---
+
+### Controllers Aninhados (para Histórico)
+
+**UsuarioHistoricoController**
+- +index(Usuario $usuario)  
+
+**CertificadoHistoricoController**
+- +index(Certificado $certificado)  
+
+---
+
+### Observers (Gatilhos de Eventos)
+
+**UsuarioObserver**
+- +created(Usuario $usuario)  
+- +updated(Usuario $usuario)  
+
+**CertificadoObserver**
+- +created(Certificado $certificado)  
+- +updated(Certificado $certificado)  
