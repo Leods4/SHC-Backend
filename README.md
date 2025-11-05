@@ -1,59 +1,215 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Documentação da API - Sistema de Horas Complementares (SHC) - v2
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Visão Geral
+API RESTful desenvolvida para servir como backend de um sistema de gerenciamento de atividades complementares.
 
-## About Laravel
+- **Framework:** Laravel 12  
+- **Banco de Dados:** PostgreSQL  
+- **Autenticação:** Laravel Sanctum (Stateless, API Tokens)  
+- **Padrões:** PSR-12, Controllers enxutos, Services e Policies  
+- **Logs:** Histórico automático e auditoria detalhada  
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Configuração e Execução Local
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Pré-requisitos
+- PHP 8.2+
+- Composer
+- PostgreSQL
 
-## Learning Laravel
+### Notas
+- A API foi projetada prioritariamente para ambiente local.
+- Disponibilizar arquivo `.env.example` com variáveis essenciais.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### CORS
+Ajustar `config/cors.php` conforme a origem do frontend:
+```php
+paths: ['api/*'],
+allowed_origins: ['http://localhost:3000', 'null'],
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Funcionalidades e Implementação
 
-### Premium Partners
+### 3.1 Autenticação e Autorização
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+#### Autenticação (AuthController)
+- Implementa login, logout e recuperação de senha.
+- Registro de usuários é ação **administrativa**.
 
-## Contributing
+#### Regras de Login
+- Login usa CPF como identificador.
+- Usuário desativado (soft delete) não pode logar.
+- Senha padrão: data de nascimento (hash gerado).
+- Recomenda-se troca da senha após 1º acesso.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### Policies
+| Policy | Regra |
+|-------|-------|
+| UsuarioPolicy | Usuário edita a si mesmo; apenas ADMIN altera role_id. Desativação via soft delete. |
+| CertificadoPolicy | ALUNO pode editar apenas quando status = ENTREGUE. ADMIN/SECRETARIA/COORDENADOR podem avaliar. |
 
-## Code of Conduct
+#### Lógica do Coordenador
+- Possui `curso_id`
+- Só atua em alunos com o mesmo `curso_id`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+### 3.1.1 Fluxo de Token (Sanctum)
+| Rota | Descrição |
+|------|-----------|
+| POST /api/auth/login | Retorna token |
+| POST /api/auth/logout | Revoga token atual |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+### 3.1.2 Desativação de Usuário (Soft Delete)
+- Rota: `DELETE /api/usuarios/{id}`
+- Model utiliza `use SoftDeletes;`
+- Usuários desativados não aparecem em consultas e não podem logar.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+### 3.2 Gestão de Certificados e Uploads
+
+- Upload via multipart/form-data
+- Armazenamento: `storage/app/certificados`
+- Apenas PDF até 5MB
+- Data de emissão não pode ser futura
+- Suporta filtros na listagem (?status=APROVADO&aluno_id=123)
+
+---
+
+### 3.3 Histórico e Auditoria
+- Implementado via Observers (UsuarioObserver, CertificadoObserver)
+- Registro armazenado em `historico_alteracoes`
+
+---
+
+### 3.4 Cálculo de Horas
+- Rota: `GET /api/usuarios/{id}/progresso`
+- Retorna soma das horas validadas
+- Também incluso em `/api/auth/me` para aluno
+
+---
+
+### 3.5 Arquitetura
+- Status do certificado definidos em constantes
+- Service Layer: UsuarioService, CertificadoService, UserSyncService
+- Providers: AuthServiceProvider (Policies) e AppServiceProvider (Observers)
+
+---
+
+## Endpoints da API
+
+### Respostas de Erro Padrão
+
+{
+"message": "Os dados fornecidos são inválidos.",
+"errors": {
+"cpf": ["O CPF informado já está em uso."]
+}
+}
+
+
+
+### Rotas Públicas
+| Método | Rota | Descrição |
+|-------|------|-----------|
+| POST | /api/auth/login | Login via CPF e senha |
+| POST | /api/auth/forgot-password | Inicia recuperação |
+| POST | /api/auth/reset-password | Conclui redefinição |
+
+### Rotas Protegidas
+| Método | Rota | Descrição |
+|-------|------|-----------|
+| GET | /api/auth/me | Retorna usuário autenticado |
+| POST | /api/auth/logout | Revoga token |
+
+#### Usuários
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/usuarios | Lista (com filtros) |
+| POST | /api/usuarios | Cria usuário (Admin/Secretaria) |
+| GET | /api/usuarios/{id} | Exibe usuário |
+| PUT | /api/usuarios/{id} | Atualiza usuário |
+| DELETE | /api/usuarios/{id} | Desativa usuário (soft delete) |
+| GET | /api/usuarios/{id}/progresso | Progresso de horas |
+| GET | /api/usuarios/{id}/historico | Histórico |
+
+#### Certificados
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/certificados | Lista certificados |
+| POST | /api/certificados | Submete certificado (upload) |
+| GET | /api/certificados/{id} | Exibe certificado |
+| PUT | /api/certificados/{id} | Atualiza (permitido só com status ENTREGUE) |
+| DELETE | /api/certificados/{id} | Deleta (mesma regra acima) |
+| POST | /api/certificados/{id}/avaliacao | Avalia certificado |
+| GET | /api/certificados/{id}/historico | Histórico |
+| GET | /api/certificados/{id}/download | Download PDF |
+
+#### Administração
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/cursos | Lista cursos |
+| POST | /api/cursos | Cria curso |
+| PUT | /api/cursos/{id} | Atualiza curso |
+| DELETE | /api/cursos/{id} | Remove curso |
+| GET | /api/categorias | Lista categorias |
+| POST | /api/categorias | Cria categoria |
+| PUT | /api/categorias/{id} | Atualiza categoria |
+| DELETE | /api/categorias/{id} | Remove categoria |
+| POST | /api/admin/sync-users | Importa/sincroniza usuários externos |
+
+---
+
+## Modelos de Dados (Resumo)
+
+### Certificado (Status)
+
+ENTREGUE
+APROVADO
+REPROVADO
+APROVADO_COM_RESSALVAS
+
+
+
+### Tabelas Principais
+- roles
+- cursos
+- categorias
+- usuarios
+- certificados
+- historico_alteracoes
+
+---
+
+## Validações (Form Requests)
+
+### Usuário
+- Campos básicos obrigatórios
+- `curso_id` e `fase` obrigatórios apenas para ALUNO e COORDENADOR
+- Senha padrão gerada automaticamente na criação
+
+### Certificados
+- PDF até 5MB
+- Data não futura
+- Dono só pode alterar quando status = ENTREGUE
+- Avaliação só para ADMIN/SECRETARIA/COORDENADOR
+
+---
+
+## Regras de Segurança
+
+- Validação de CPF
+- Throttling de login
+- Auditoria automática
+- Policies aplicadas rigorosamente
+- `.env.example` incluído
+
+---
+
+
