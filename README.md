@@ -42,10 +42,12 @@ POST     | /auth/change-password | Altera senha                        | Autenti
 ----------------------------------------------------------------
 
 Exemplo payload:
+```
 {
   "cpf": "000.000.000-00",
   "password": "senha_secreta"
 }
+```
 
 ---
 ### 4. CERTIFICADOS — ENDPOINTS
@@ -88,12 +90,13 @@ carga_horaria_solicitada (int)
 arquivo (.pdf, até 10MB)
 
 #### Payload — Avaliação do Coordenador
-
+```
 {
   "status": "APROVADO",
   "horas_validadas": 10,
   "observacao": "Validação ok."
 }
+```
 
 ---
 ### 5. USUÁRIOS — CRUD / PERFIL
@@ -118,6 +121,7 @@ Regras de Edição:
 
 
 Payload exemplo:
+```
 {
   "nome": "João Silva Editado",
   "email": "joao.novo@email.com",
@@ -125,9 +129,11 @@ Payload exemplo:
   "curso_id": 1,
   "fase": 6
 }
+```
 
 
 Modelo de retorno:
+```
 {
   "id": 1,
   "nome": "João Silva",
@@ -139,6 +145,7 @@ Modelo de retorno:
   },
   "fase": 5
 }
+```
 
 ---
 ### 6. EXEMPLOS DE USO
@@ -153,7 +160,7 @@ Modelo de retorno:
 3. Aluno editando seus dados:
    PUT /api/usuarios/10
    Authorization: Bearer {token}
-
+```
    {
      "nome": "Maria Souza Alterado",
      "email": "maria@email.com",
@@ -161,6 +168,7 @@ Modelo de retorno:
      "curso_id": 3,
      "fase": 4
    }
+   ```
 
 ---
 ### 7. CONFIGURAÇÕES E CURSOS
@@ -188,7 +196,6 @@ Status do Certificado:
 - APROVADO
 - REPROVADO
 - APROVADO_COM_RESSALVAS
-
 ---
 ### 9. ERROS
 
@@ -198,9 +205,11 @@ Erros comuns:
 - 422 → Erro de validação
 
 Exemplo 422:
+```
 {
   "message": "The given data was invalid.",
   "errors": {
     "cpf": ["O campo cpf é obrigatório."]
   }
 }
+```
