@@ -1,18 +1,14 @@
 # Documentação da API - SHC (Sistema de Horas Complementares) - v1.1
 
-===========================================================
-1. VISÃO GERAL
-===========================================================
+### 1. VISÃO GERAL
 
 Base URL:                http://localhost:8000/api
 Framework:               Laravel 12
 Autenticação:            Bearer Token (Laravel Sanctum)
 Formato de Resposta:     JSON (application/json)
 
-
-===========================================================
-2. CONFIGURAÇÃO INICIAL
-===========================================================
+---
+### 2. CONFIGURAÇÃO INICIAL
 
 1. Clone o repositório:
    git clone <repo_url>
@@ -28,17 +24,12 @@ Formato de Resposta:     JSON (application/json)
    → Será criado um usuário admin:
      Email: admin@fmp.edu.br
      Senha: admin123
+---
+### 3. AUTENTICAÇÃO E SEGURANÇA
 
-
-
-===========================================================
-3. AUTENTICAÇÃO E SEGURANÇA
-===========================================================
-
-Cabeçalhos obrigatórios:
-----------------------------------------------------------------
-Accept: application/json
-Authorization: Bearer {token}
+#### Cabeçalhos obrigatórios:
+#### Accept: application/json
+#### Authorization: Bearer {token}
 ----------------------------------------------------------------
 
 TABELA — Auth Endpoints
@@ -56,11 +47,8 @@ Exemplo payload:
   "password": "senha_secreta"
 }
 
-
-
-===========================================================
-4. CERTIFICADOS — ENDPOINTS
-===========================================================
+---
+### 4. CERTIFICADOS — ENDPOINTS
 
 TABELA — Endpoints de Certificados
 -------------------------------------------------------------------------------------
@@ -73,9 +61,8 @@ PATCH    | /certificados/{id}/avaliar    | Aprovar/Reprovar certificado         
 -------------------------------------------------------------------------------------
 
 
------------------------------------------------------------
-Filtros de busca GET /certificados
------------------------------------------------------------
+#### Filtros de busca GET /certificados
+
 status        → ENTREGUE, APROVADO, REPROVADO  
 aluno_id      → filtra por aluno  
 search        → busca por nome/CPF  
@@ -84,17 +71,15 @@ data_fim      → YYYY-MM-DD
 curso_id      → filtra por curso  
 
 
------------------------------------------------------------
-Regras por Perfil
------------------------------------------------------------
+#### Regras por Perfil
+
 Aluno:            filtros aplicam somente ao próprio aluno  
 Coordenador:      pode filtrar por aluno_id e status=ENTREGUE  
 Secretaria/Admin: acesso geral, filtros amplos  
 
 
------------------------------------------------------------
-Payload — Envio de Certificado (multipart/form-data)
------------------------------------------------------------
+#### Payload — Envio de Certificado (multipart/form-data)
+
 categoria  
 nome_certificado  
 instituicao  
@@ -102,21 +87,16 @@ data_emissao (Y-m-d)
 carga_horaria_solicitada (int)  
 arquivo (.pdf, até 10MB)
 
+#### Payload — Avaliação do Coordenador
 
------------------------------------------------------------
-Payload — Avaliação do Coordenador
------------------------------------------------------------
 {
   "status": "APROVADO",
   "horas_validadas": 10,
   "observacao": "Validação ok."
 }
 
-
-
-===========================================================
-5. USUÁRIOS — CRUD / PERFIL
-===========================================================
+---
+### 5. USUÁRIOS — CRUD / PERFIL
 
 TABELA — Endpoints de Usuários
 ----------------------------------------------------------------------------------------
@@ -160,11 +140,8 @@ Modelo de retorno:
   "fase": 5
 }
 
-
-
-===========================================================
-6. EXEMPLOS DE USO
-===========================================================
+---
+### 6. EXEMPLOS DE USO
 
 1. Coordenador vendo certificados de um aluno:
    GET /api/certificados?aluno_id=42
@@ -185,11 +162,9 @@ Modelo de retorno:
      "fase": 4
    }
 
+---
+### 7. CONFIGURAÇÕES E CURSOS
 
-
-===========================================================
-7. CONFIGURAÇÕES E CURSOS
-===========================================================
 
 TABELA — Endpoints de Configurações
 ------------------------------------------------------------
@@ -200,11 +175,7 @@ PUT      | /configuracoes   | Atualiza regras           | Admin
 GET      | /cursos          | Lista cursos              | Autenticado
 ------------------------------------------------------------
 
-
-
-===========================================================
-8. DICIONÁRIO DE DADOS (ENUMS)
-===========================================================
+### 8. DICIONÁRIO DE DADOS (ENUMS)
 
 Tipo de Usuário:
 - ALUNO
@@ -218,11 +189,8 @@ Status do Certificado:
 - REPROVADO
 - APROVADO_COM_RESSALVAS
 
-
-
-===========================================================
-9. ERROS
-===========================================================
+---
+### 9. ERROS
 
 Erros comuns:
 - 401 → Token inválido/ausente
