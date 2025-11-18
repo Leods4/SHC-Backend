@@ -1,176 +1,238 @@
-```markdown
-Documentação da API - SHC (Sistema de Horas Complementares)
+# Documentação da API - SHC (Sistema de Horas Complementares) - v1.1
 
-1. Visão Geral  
-Base URL: http://localhost:8000/api  
-Framework: Laravel 12  
-Autenticação: Token Bearer (Laravel Sanctum)  
-Formato de Resposta: JSON (application/json)
+===========================================================
+1. VISÃO GERAL
+===========================================================
 
-2. Configuração Inicial  
-Para rodar o projeto localmente, siga os passos abaixo:
+Base URL:                http://localhost:8000/api
+Framework:               Laravel 12
+Autenticação:            Bearer Token (Laravel Sanctum)
+Formato de Resposta:     JSON (application/json)
 
-Clone e Instale Dependências:  
-**Bash**
-```
 
-git clone <repo_url>
-cd shc-backend
-composer install
+===========================================================
+2. CONFIGURAÇÃO INICIAL
+===========================================================
 
-```
+1. Clone o repositório:
+   git clone <repo_url>
+   cd shc-backend
+   composer install
 
-Variáveis de Ambiente:  
-Copie o `.env.example` para `.env` e configure o banco de dados.
+2. Configure o arquivo .env:
+   Copie .env.example → .env e ajuste banco de dados.
 
-Banco de Dados e Seed:  
-Execute as migrations e o seed para criar os perfis e o usuário administrador inicial.  
-**Bash**
-```
+3. Execute as migrations:
+   php artisan migrate --seed
 
-php artisan migrate --seed
+   → Será criado um usuário admin:
+     Email: admin@fmp.edu.br
+     Senha: admin123
 
-```
 
-Isso criará um usuário `admin@fmp.edu.br` com senha `admin123`.
 
-3. Autenticação e Segurança  
-A API utiliza tokens de acesso (Sanctum). O front-end deve armazenar o token recebido no login (ex: no localStorage) e enviá-lo em todas as requisições subsequentes.
+===========================================================
+3. AUTENTICAÇÃO E SEGURANÇA
+===========================================================
 
-**Cabeçalhos Obrigatórios:**  
-**HTTP**
-```
-
+Cabeçalhos obrigatórios:
+----------------------------------------------------------------
 Accept: application/json
-Authorization: Bearer {seu_token_aqui}
+Authorization: Bearer {token}
+----------------------------------------------------------------
 
-```
+TABELA — Auth Endpoints
+----------------------------------------------------------------
+Método   | Endpoint              | Descrição                          | Acesso
+---------|------------------------|--------------------------------------|---------
+POST     | /auth/login           | Realiza login e retorna token       | Público
+POST     | /auth/logout          | Revoga token                        | Autenticado
+POST     | /auth/change-password | Altera senha                        | Autenticado
+----------------------------------------------------------------
 
-### 🔐 Auth Endpoints
-
-| Método | Endpoint              | Descrição                                    | Acesso       |
-|-------|------------------------|-----------------------------------------------|--------------|
-| POST  | /auth/login           | Realiza login e retorna Token + Dados         | Público      |
-| POST  | /auth/logout          | Revoga o token atual                          | Autenticado  |
-| POST  | /auth/change-password | Altera a senha do usuário logado              | Autenticado  |
-
-**Exemplo de Payload (Login)**  
-**JSON**
-```
-
+Exemplo payload:
 {
-"cpf": "000.000.000-00",
-"password": "senha_secreta"
+  "cpf": "000.000.000-00",
+  "password": "senha_secreta"
 }
 
-```
 
-4. Recursos e Endpoints  
 
-### 🎓 Certificados (Atividades Complementares)
+===========================================================
+4. CERTIFICADOS — ENDPOINTS
+===========================================================
 
-| Método | Endpoint                     | Descrição                                      | Permissão                 |
-|--------|-------------------------------|------------------------------------------------|----------------------------|
-| GET    | /certificados                | Lista certificados (dinâmico por perfil)       | Autenticado               |
-| POST   | /certificados                | Envia novo certificado (multipart/form-data)   | Aluno                     |
-| GET    | /certificados/{id}           | Detalhes de um certificado                     | Dono/Coord/Admin          |
-| PATCH  | /certificados/{id}/avaliar   | Aprova/Reprova certificado                     | Coordenador               |
+TABELA — Endpoints de Certificados
+-------------------------------------------------------------------------------------
+Método   | Endpoint                     | Descrição                               | Acesso
+---------|-------------------------------|-------------------------------------------|--------------------
+GET      | /certificados                 | Lista certificados (com filtros)         | Autenticado
+POST     | /certificados                 | Envia novo certificado                   | Aluno
+GET      | /certificados/{id}            | Detalhes do certificado                  | Dono/Coord/Admin
+PATCH    | /certificados/{id}/avaliar    | Aprovar/Reprovar certificado             | Coordenador
+-------------------------------------------------------------------------------------
 
-**Payload: Enviar Certificado (Aluno)**  
-Tipo: multipart/form-data  
-- categoria: string  
-- nome_certificado: string  
-- instituicao: string  
-- data_emissao: date (Y-m-d)  
-- carga_horaria_solicitada: int  
-- arquivo: file (.pdf, max 10MB)
 
-**Payload: Avaliar Certificado (Coordenador)**  
-**JSON**
-```
+-----------------------------------------------------------
+Filtros de busca GET /certificados
+-----------------------------------------------------------
+status        → ENTREGUE, APROVADO, REPROVADO  
+aluno_id      → filtra por aluno  
+search        → busca por nome/CPF  
+data_inicio   → YYYY-MM-DD  
+data_fim      → YYYY-MM-DD  
+curso_id      → filtra por curso  
 
+
+-----------------------------------------------------------
+Regras por Perfil
+-----------------------------------------------------------
+Aluno:            filtros aplicam somente ao próprio aluno  
+Coordenador:      pode filtrar por aluno_id e status=ENTREGUE  
+Secretaria/Admin: acesso geral, filtros amplos  
+
+
+-----------------------------------------------------------
+Payload — Envio de Certificado (multipart/form-data)
+-----------------------------------------------------------
+categoria  
+nome_certificado  
+instituicao  
+data_emissao (Y-m-d)  
+carga_horaria_solicitada (int)  
+arquivo (.pdf, até 10MB)
+
+
+-----------------------------------------------------------
+Payload — Avaliação do Coordenador
+-----------------------------------------------------------
 {
-"status": "APROVADO",
-"horas_validadas": 10,
-"observacao": "Validação ok."
+  "status": "APROVADO",
+  "horas_validadas": 10,
+  "observacao": "Validação ok."
 }
 
-```
 
----
 
-### 👥 Usuários (CRUD)
+===========================================================
+5. USUÁRIOS — CRUD / PERFIL
+===========================================================
 
-| Método | Endpoint                 | Descrição                            | Permissão  |
-|--------|---------------------------|----------------------------------------|------------|
-| GET    | /usuarios                 | Lista usuários (?tipo=ALUNO)          | Admin/Sec  |
-| POST   | /usuarios                 | Cria novo usuário                      | Admin/Sec  |
-| PUT    | /usuarios/{id}            | Atualiza usuário                       | Admin/Sec  |
-| DELETE | /usuarios/{id}            | Remove usuário                         | Admin/Sec  |
-| GET    | /usuarios/{id}/progresso  | Horas aprovadas vs necessárias         | Ver Regra* |
-| POST   | /usuarios/avatar          | Atualiza avatar do usuário logado      | Próprio Usuário |
+TABELA — Endpoints de Usuários
+----------------------------------------------------------------------------------------
+Método   | Endpoint                  | Descrição                                | Acesso
+---------|----------------------------|--------------------------------------------|--------------------
+GET      | /usuarios                 | Lista usuários                             | Admin/Secretaria
+POST     | /usuarios                 | Cria novo usuário                          | Admin/Secretaria
+PUT      | /usuarios/{id}            | Atualiza dados                             | Admin/Sec/Próprio
+DELETE   | /usuarios/{id}            | Remove usuário                             | Admin/Secretaria
+GET      | /usuarios/{id}/progresso  | Retorna progresso de horas                 | Regra*
+POST     | /usuarios/avatar          | Atualiza foto do próprio usuário           | Próprio Usuário
+----------------------------------------------------------------------------------------
 
-*Regra de Progresso: Admin/Sec veem todos; Coord vê do seu curso; Aluno vê apenas o seu.*
+Regras de Edição:
+- Admin/Secretaria → podem alterar tudo  
+- Próprio usuário → apenas nome + email  
+- Senha → /auth/change-password  
+- Avatar → /usuarios/avatar  
 
-**Modelo de Usuário (JSON Response)**  
-```
 
+Payload exemplo:
 {
-"id": 1,
-"nome": "João Silva",
-"email": "[joao@email.com](mailto:joao@email.com)",
-"tipo": "ALUNO",
-"curso": {
-"id": 1,
-"nome": "Direito"
-},
-"fase": 5
+  "nome": "João Silva Editado",
+  "email": "joao.novo@email.com",
+  "tipo": "ALUNO",
+  "curso_id": 1,
+  "fase": 6
 }
 
-```
 
----
-
-### ⚙️ Configurações e Auxiliares
-
-| Método | Endpoint        | Descrição                         | Permissão |
-|--------|------------------|------------------------------------|-----------|
-| GET    | /configuracoes  | Retorna regras de negócio          | Admin     |
-| PUT    | /configuracoes  | Atualiza regras de negócio         | Admin     |
-| GET    | /cursos         | Lista cursos disponíveis           | Autenticado |
-
----
-
-5. Dicionário de Dados (Enums)
-
-**Tipo de Usuário (tipo)**  
-- ALUNO  
-- COORDENADOR  
-- SECRETARIA  
-- ADMINISTRADOR  
-
-**Status do Certificado (status)**  
-- ENTREGUE  
-- APROVADO  
-- REPROVADO  
-- APROVADO_COM_RESSALVAS  
-
----
-
-6. Tratamento de Erros
-
-A API retorna códigos HTTP padrão:
-
-- **401 Unauthorized**: Token inválido ou ausente  
-- **403 Forbidden**: Sem permissão  
-- **422 Unprocessable Entity**: Erros de validação  
-
-**Exemplo (422):**  
-```
-
+Modelo de retorno:
 {
-"message": "The given data was invalid.",
-"errors": {
-"cpf": ["O campo cpf é obrigatório."]
+  "id": 1,
+  "nome": "João Silva",
+  "email": "joao@email.com",
+  "tipo": "ALUNO",
+  "curso": {
+    "id": 1,
+    "nome": "Direito"
+  },
+  "fase": 5
 }
+
+
+
+===========================================================
+6. EXEMPLOS DE USO
+===========================================================
+
+1. Coordenador vendo certificados de um aluno:
+   GET /api/certificados?aluno_id=42
+   Authorization: Bearer {token}
+
+2. Secretaria buscando aluno por nome:
+   GET /api/certificados?search=Maria&curso_id=3
+
+3. Aluno editando seus dados:
+   PUT /api/usuarios/10
+   Authorization: Bearer {token}
+
+   {
+     "nome": "Maria Souza Alterado",
+     "email": "maria@email.com",
+     "tipo": "ALUNO",
+     "curso_id": 3,
+     "fase": 4
+   }
+
+
+
+===========================================================
+7. CONFIGURAÇÕES E CURSOS
+===========================================================
+
+TABELA — Endpoints de Configurações
+------------------------------------------------------------
+Método   | Endpoint         | Descrição                 | Acesso
+---------|-------------------|----------------------------|--------
+GET      | /configuracoes   | Retorna regras do sistema | Admin
+PUT      | /configuracoes   | Atualiza regras           | Admin
+GET      | /cursos          | Lista cursos              | Autenticado
+------------------------------------------------------------
+
+
+
+===========================================================
+8. DICIONÁRIO DE DADOS (ENUMS)
+===========================================================
+
+Tipo de Usuário:
+- ALUNO
+- COORDENADOR
+- SECRETARIA
+- ADMINISTRADOR
+
+Status do Certificado:
+- ENTREGUE
+- APROVADO
+- REPROVADO
+- APROVADO_COM_RESSALVAS
+
+
+
+===========================================================
+9. ERROS
+===========================================================
+
+Erros comuns:
+- 401 → Token inválido/ausente
+- 403 → Sem permissão
+- 422 → Erro de validação
+
+Exemplo 422:
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "cpf": ["O campo cpf é obrigatório."]
+  }
 }
