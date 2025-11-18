@@ -10,25 +10,53 @@ class UpdateUsuarioRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user(); // usuário autenticado
+        $targetUserId = $this->route('user')->id; // usuário sendo editado
+
+        // Admin e Secretaria podem editar qualquer usuário
+        if ($user->isAdmin() || $user->isSecretaria()) {
+            return true;
+        }
+
+        // O próprio usuário pode editar o próprio perfil (Perfil Self-Service)
+        return $user->id === $targetUserId;
     }
 
     public function rules(): array
     {
-        // O ID do usuário sendo atualizado vem da rota
+        // ID do usuário sendo atualizado
         $userId = $this->route('user')->id;
 
         return [
             'nome' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($userId)],
-            'cpf' => ['required', 'string', 'max:14', Rule::unique('users')->ignore($userId)],
-            'matricula' => ['nullable', 'string', Rule::unique('users')->ignore($userId)],
 
-            // Senha é opcional na edição (só envia se quiser trocar)
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($userId)
+            ],
+
+            'cpf' => [
+                'required',
+                'string',
+                'max:14',
+                Rule::unique('users')->ignore($userId)
+            ],
+
+            'matricula' => [
+                'nullable',
+                'string',
+                Rule::unique('users')->ignore($userId)
+            ],
+
+            // Senha é opcional — usada apenas se o usuário quiser alterar
             'password' => ['nullable', 'string', 'min:6'],
 
             'tipo' => ['required', Rule::enum(TipoUsuario::class)],
+
             'curso_id' => ['nullable', 'exists:cursos,id'],
+
             'fase' => ['nullable', 'integer'],
         ];
     }
