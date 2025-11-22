@@ -213,3 +213,22 @@ Exemplo 422:
   }
 }
 ```
+
+---
+### 10. CATEGORIA — ENDPOINTS
+
+TABELA — Endpoints de Categorias
+Método   | Endpoint        | Descrição                          | Permissão
+---------|------------------|--------------------------------------|--------------------
+GET      | /categorias      | Lista todas as categorias disponíveis. | Autenticado (Todos)
+POST     | /categorias      | Cria uma nova categoria.              | Admin
+DELETE   | /categorias/{id} | Remove uma categoria.                 | Admin
+------------------------------------------------------------
+
+
+#### Payload — Criar categoria
+```
+{
+  "nome": "Nova Categoria Exemplo"
+}
+```
