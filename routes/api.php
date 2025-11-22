@@ -6,6 +6,8 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\CertificadoController;
 use App\Http\Controllers\ConfiguracaoController;
 use App\Http\Controllers\CursoController;
+use App\Http\Controllers\CategoriaController;
+
 
 // 1. Autenticação (Público)
 // [cite: 19]
@@ -56,5 +58,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 2.5. Cursos (Recurso auxiliar para formulários)
     Route::get('/cursos', [CursoController::class, 'index']);
+
+    // 2.6. Categorias (Novo)
+    // Listagem aberta para todos os usuários logados (para popular selects)
+    Route::get('/categorias', [CategoriaController::class, 'index']);
+
+    // Gestão restrita ao Administrador
+    Route::post('/categorias', [CategoriaController::class, 'store'])->middleware('can:is-admin');
+    Route::delete('/categorias/{categoria}', [CategoriaController::class, 'destroy'])->middleware('can:is-admin');
 
 });
