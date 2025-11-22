@@ -55,5 +55,19 @@ class DatabaseSeeder extends Seeder
         // 5. Configurações Iniciais
         Configuracao::create(['chave' => 'modo_manutencao', 'valor' => 'false']);
         Configuracao::create(['chave' => 'total_horas_padrao', 'valor' => '200']);
+
+        // 6. Categorias Iniciais
+        $categorias = [
+            'Curso Extracurricular',
+            'Participação em Eventos/Palestras',
+            'Iniciação Científica',
+            'Estágio Não Obrigatório',
+            'Monitoria',
+            'Voluntariado'
+        ];
+
+        foreach ($categorias as $cat) {
+            \App\Models\Categoria::create(['nome' => $cat]);
+        }
     }
 }
