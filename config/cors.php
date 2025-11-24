@@ -29,7 +29,7 @@ return [
     | Allowed Origins
     |--------------------------------------------------------------------------
     |
-    | Coloque aqui as origens permitidas no CORS.
+    | Origens permitidas (Live Server).
     |
     */
 
@@ -42,9 +42,6 @@ return [
     |--------------------------------------------------------------------------
     | Allowed Origins Patterns
     |--------------------------------------------------------------------------
-    |
-    | Útil quando precisa usar regex para liberar domínios.
-    |
     */
 
     'allowed_origins_patterns' => [],
@@ -54,43 +51,43 @@ return [
     | Allowed Headers
     |--------------------------------------------------------------------------
     |
-    | Quais headers o CORS deve aceitar.
+    | Headers permitidos pelo navegador. '*' +
+    | explicitamente Authorization para evitar falha no preflight.
     |
     */
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['*', 'Authorization'],
 
     /*
     |--------------------------------------------------------------------------
     | Exposed Headers
     |--------------------------------------------------------------------------
     |
-    | Headers que podem ser expostos ao navegador.
+    | Headers que podem ser lidos pelo frontend.
+    | Authorization aparece aqui porque alguns fluxos enviam tokens.
     |
     */
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['Authorization'],
 
     /*
     |--------------------------------------------------------------------------
     | Max Age
     |--------------------------------------------------------------------------
-    |
-    | Tempo em segundos que o CORS pode ser cacheado.
-    |
     */
 
-    'max_age' => 0,
+    'max_age' => 86400, // 24h de cache do preflight
 
     /*
     |--------------------------------------------------------------------------
     | Supports Credentials
     |--------------------------------------------------------------------------
     |
-    | Se a requisição CORS pode enviar cookies/autenticação.
+    | OBRIGATÓRIO quando usa Authorization: Bearer <token>
+    | Mesmo sem cookies, o browser considera como "credenciais".
     |
     */
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
