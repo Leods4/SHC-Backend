@@ -13,7 +13,7 @@ class Certificado extends Model
 
     protected $fillable = [
         'aluno_id',
-        'categoria',
+        'categoria_id', // atualizado
         'nome_certificado',
         'instituicao',
         'data_emissao',
@@ -32,15 +32,21 @@ class Certificado extends Model
         'data_validacao' => 'datetime',
     ];
 
-    // Relacionamento: Certificado pertence a um Aluno
+    /** Relacionamento: Certificado pertence a um Aluno */
     public function aluno(): BelongsTo
     {
         return $this->belongsTo(User::class, 'aluno_id');
     }
 
-    // Relacionamento: Certificado é avaliado por um Coordenador
+    /** Relacionamento: Certificado é avaliado por um Coordenador */
     public function coordenador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'coordenador_id');
+    }
+
+    /** Novo relacionamento: Certificado pertence a uma Categoria */
+    public function categoria(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
     }
 }
