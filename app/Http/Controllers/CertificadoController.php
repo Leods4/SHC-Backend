@@ -14,25 +14,25 @@ class CertificadoController extends Controller
 {
     /**
      * INDEX — Listagem com filtros por regras de permissão e filtros avançados
-     * Atende requisitos: [cite: 29, 35, 40, 46] e novos requisitos enviados
      */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        $query = Certificado::query()->with('aluno', 'coordenador');
+        // Agora inclui a categoria
+        $query = Certificado::query()->with('aluno', 'coordenador', 'categoria');
 
         /**
-         * 🔍 FILTROS GLOBAIS (para qualquer tipo de usuário)
+         * 🔍 FILTROS GLOBAIS
          */
 
-        // 1. Filtro por aluno específico (necessário para o Coordenador ver histórico de um aluno)
-        if ($request->has('aluno_id')) {
+        // 1. Filtro por aluno
+        if ($request->filled('aluno_id')) {
             $query->where('aluno_id', $request->aluno_id);
         }
 
-        // 2. Busca por nome/cpf do aluno (Fluxo da Secretaria — Histórico Geral)
-        if ($request->has('search')) {
+        // 2. Busca por nome/cpf do aluno
+        if ($request->filled('search')) {
             $term = $request->search;
 
             $query->whereHas('aluno', function ($q) use ($term) {
@@ -41,19 +41,27 @@ class CertificadoController extends Controller
             });
         }
 
-        // 3. Filtro por intervalo de datas
-        if ($request->has('data_inicio') && $request->has('data_fim')) {
+        // 3. Intervalo de datas
+        if ($request->filled('data_inicio') && $request->filled('data_fim')) {
             $query->whereBetween('data_emissao', [
                 $request->data_inicio,
-                $request->data_fim
+                $request->data_fim,
             ]);
         }
 
-        // 4. Filtro por curso (somente Secretaria e Admin)
-        if ($request->has('curso_id') && ($user->isSecretaria() || $user->isAdmin())) {
+        // 4. Filtro por curso (somente Secretaria/Admin)
+        if (
+            $request->filled('curso_id') &&
+            ($user->isSecretaria() || $user->isAdmin())
+        ) {
             $query->whereHas('aluno', function ($q) use ($request) {
                 $q->where('curso_id', $request->curso_id);
             });
+        }
+
+        // 5. (NOVO) filtro por categoria
+        if ($request->filled('categoria_id')) {
+            $query->where('categoria_id', $request->categoria_id);
         }
 
         /**
@@ -61,27 +69,24 @@ class CertificadoController extends Controller
          */
 
         if ($user->isAluno()) {
-            // [cite: 29] — Aluno vê apenas seus certificados
             $query->where('aluno_id', $user->id);
 
         } elseif ($user->isCoordenador()) {
 
-            // Coordenador vê apenas certificados de alunos do seu curso
+            // Coordenador só vê alunos do seu curso
             $query->whereHas('aluno', fn($q) =>
                 $q->where('curso_id', $user->curso_id)
             );
 
-            // [cite: 35] — Tela de validação: listar apenas ENTREGUES se solicitado
+            // Listar apenas ENTREGUES se solicitado
             if ($request->status === 'ENTREGUE') {
                 $query->where('status', StatusCertificado::ENTREGUE);
             }
 
         } elseif ($user->isSecretaria()) {
-            // [cite: 46] — Secretaria vê todos (mas pode aplicar filtros avançados)
-            // Nenhuma restrição adicional
-
+            // Secretaria vê tudo (com filtros opcionais)
         }
-        // Admin também vê tudo (com filtros opcionais)
+        // Admin também vê tudo
 
         return CertificadoResource::collection(
             $query->latest()->get()
@@ -89,8 +94,7 @@ class CertificadoController extends Controller
     }
 
     /**
-     * STORE — Envio de certificado pelo aluno
-     * Atende [cite: 28]
+     * STORE — Aluno envia certificado
      */
     public function store(StoreCertificadoRequest $request)
     {
@@ -103,18 +107,20 @@ class CertificadoController extends Controller
             'status' => StatusCertificado::ENTREGUE,
         ]);
 
+        // Necessário para o Resource retornar categoria
+        $certificado->load('categoria');
+
         return new CertificadoResource($certificado);
     }
 
     /**
-     * AVALIAR — Aprovação/Reprovação pelo Coordenador
-     * Atende [cite: 39]
+     * AVALIAR — Coordenador aprova/reprova o certificado
      */
     public function avaliar(Certificado $certificado, AvaliacaoRequest $request)
     {
         $data = $request->validated();
 
-        // Se reprovado → zera horas validadas
+        // Se reprovado → horas validadas = 0
         if ($data['status'] === StatusCertificado::REPROVADO->value) {
             $data['horas_validadas'] = 0;
         }
@@ -124,6 +130,9 @@ class CertificadoController extends Controller
             'coordenador_id' => Auth::id(),
             'data_validacao' => now(),
         ]);
+
+        // Recarrega categoria para o Resource
+        $certificado->load('categoria');
 
         return new CertificadoResource($certificado);
     }
