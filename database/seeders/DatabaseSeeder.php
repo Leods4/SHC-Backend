@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         // 1. Criar Cursos Básicos
         $cursoAds = Curso::create([
             'nome' => 'Análise e Desenvolvimento de Sistemas',
-            'horas_necessarias' => 180 // Exemplo
+            'horas_necessarias' => 180
         ]);
 
         $cursoDireito = Curso::create([
@@ -24,16 +24,16 @@ class DatabaseSeeder extends Seeder
             'horas_necessarias' => 300
         ]);
 
-        // 2. Criar Administrador (Para primeiro acesso)
+        // 2. Criar Administrador
         User::create([
             'nome' => 'Administrador do Sistema',
             'email' => 'admin@fmp.edu.br',
             'cpf' => '000.000.000-00',
-            'password' => Hash::make('admin123'), // Senha inicial
+            'password' => Hash::make('admin123'),
             'tipo' => TipoUsuario::ADMINISTRADOR,
         ]);
 
-        // 3. Criar uma Secretaria
+        // 3. Criar Secretaria
         User::create([
             'nome' => 'Secretaria Acadêmica',
             'email' => 'secretaria@fmp.edu.br',
@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
             'tipo' => TipoUsuario::SECRETARIA,
         ]);
 
-        // 4. Criar um Coordenador (ADS)
+        // 4. Criar Coordenador (ADS)
         User::create([
             'nome' => 'Coordenador ADS',
             'email' => 'coord.ads@fmp.edu.br',
@@ -52,11 +52,24 @@ class DatabaseSeeder extends Seeder
             'curso_id' => $cursoAds->id,
         ]);
 
-        // 5. Configurações Iniciais
+        // 5. Criar Aluno
+        User::create([
+            'nome' => 'Aluno Teste',
+            'email' => 'aluno@fmp.edu.br',
+            'cpf' => '333.333.333-33',
+            'matricula' => '20250001',
+            'password' => Hash::make('aluno123'),
+            'tipo' => TipoUsuario::ALUNO,
+            'avatar_url' => 'https://ui-avatars.com/api/?name=Aluno+Teste',
+            'curso_id' => $cursoAds->id,
+            'fase' => 3, // exemplo: fase do curso
+        ]);
+
+        // 6. Configurações Iniciais
         Configuracao::create(['chave' => 'modo_manutencao', 'valor' => 'false']);
         Configuracao::create(['chave' => 'total_horas_padrao', 'valor' => '200']);
 
-        // 6. Categorias Iniciais
+        // 7. Categorias Iniciais
         $categorias = [
             'Curso Extracurricular',
             'Participação em Eventos/Palestras',
