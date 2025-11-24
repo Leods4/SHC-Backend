@@ -82,7 +82,7 @@ Secretaria/Admin: acesso geral, filtros amplos
 
 #### Payload — Envio de Certificado (multipart/form-data)
 
-categoria  
+categoria_id  
 nome_certificado  
 instituicao  
 data_emissao (Y-m-d)  
