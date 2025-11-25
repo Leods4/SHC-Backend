@@ -43,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // [cite: 29, 35, 46] (Listagem dinâmica baseada no perfil)
     Route::get('/certificados', [CertificadoController::class, 'index']);
     // [cite: 28] (Aluno envia)
+    //Route::post('/certificados', [CertificadoController::class, 'store'])->middleware('can:is-aluno');
+    // Tente assim temporariamente:
     Route::post('/certificados', [CertificadoController::class, 'store'])->middleware('can:is-aluno');
 
     Route::prefix('certificados/{certificado}')->scopeBindings()->group(function () {
