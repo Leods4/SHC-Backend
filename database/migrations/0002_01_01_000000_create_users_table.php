@@ -13,6 +13,10 @@ return new class extends Migration
             $table->string('nome');
             $table->string('email')->unique();
             $table->string('cpf')->unique();
+
+            // Campo vindo da segunda migration
+            $table->date('data_nascimento')->nullable()->after('cpf');
+
             $table->string('matricula')->nullable()->unique();
             $table->string('password');
             $table->string('tipo'); // ALUNO, COORDENADOR, SECRETARIA, ADMINISTRADOR
