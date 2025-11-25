@@ -225,10 +225,25 @@ POST     | /categorias      | Cria uma nova categoria.              | Admin
 DELETE   | /categorias/{id} | Remove uma categoria.                 | Admin
 ------------------------------------------------------------
 
-
-#### Payload — Criar categoria
+### 11. AUDIT — TABELA DE ALTERACOES (User e Certificado)
+Usa observers para registrar alteracoes na tabela audit.
+#### Exemplo — Coordenador aprova um certificado.
 ```
 {
-  "nome": "Nova Categoria Exemplo"
+  "id": 105,
+  "user_id": 2, // ID do Coordenador
+  "event": "updated",
+  "auditable_type": "App\\Models\\Certificado",
+  "auditable_id": 45,
+  "old_values": {
+    "status": "ENTREGUE",
+    "horas_validadas": null
+  },
+  "new_values": {
+    "status": "APROVADO",
+    "horas_validadas": 20
+  },
+  "ip_address": "192.168.1.15",
+  "created_at": "2025-11-25 10:30:00"
 }
 ```
