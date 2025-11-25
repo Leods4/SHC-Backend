@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -18,7 +19,7 @@ class User extends Authenticatable
         'nome',
         'email',
         'cpf',
-        'data_nascimento', // <--- Adicionado
+        'data_nascimento',
         'matricula',
         'password',
         'tipo',
@@ -35,28 +36,55 @@ class User extends Authenticatable
     protected $casts = [
         'tipo' => TipoUsuario::class,
         'password' => 'hashed',
-        'data_nascimento' => 'date', // <--- Adicionado
+        'data_nascimento' => 'date',
     ];
 
-    // Relacionamento: Usuário (Aluno/Coordenador) pertence a um Curso
+    // --------------------------------------------------------
+    // 🔥 BOOT: Cria a senha automaticamente se não enviada
+    // --------------------------------------------------------
+    protected static function booted()
+    {
+        static::creating(function (User $user) {
+            if (empty($user->password) && !empty($user->data_nascimento)) {
+                // Formata data BR: DDMMAAAA
+                $user->password = $user->data_nascimento->format('dmY');
+            }
+        });
+    }
+
+    // --------------------------------------------------------
+    // 🔥 Mutator explícito (opcional, mas seguro)
+    // Garante que password sempre seja string antes do hash
+    // --------------------------------------------------------
+    public function setPasswordAttribute($value)
+    {
+        // Laravel já faz hash automaticamente (por causa do cast)
+        $this->attributes['password'] = $value;
+    }
+
+    // --------------------------------------------------------
+    // Relacionamentos
+    // --------------------------------------------------------
+
     public function curso(): BelongsTo
     {
         return $this->belongsTo(Curso::class);
     }
 
-    // Relacionamento: Aluno submete muitos certificados
     public function certificadosSubmetidos(): HasMany
     {
         return $this->hasMany(Certificado::class, 'aluno_id');
     }
 
-    // Relacionamento: Coordenador avalia muitos certificados
     public function certificadosAvaliados(): HasMany
     {
         return $this->hasMany(Certificado::class, 'coordenador_id');
     }
 
-    // Helper para verificar tipo
+    // --------------------------------------------------------
+    // Helpers
+    // --------------------------------------------------------
+
     public function isAluno(): bool
     {
         return $this->tipo === TipoUsuario::ALUNO;
