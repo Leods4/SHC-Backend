@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
@@ -20,6 +18,7 @@ class User extends Authenticatable
         'nome',
         'email',
         'cpf',
+        'data_nascimento', // <--- Adicionado
         'matricula',
         'password',
         'tipo',
@@ -36,6 +35,7 @@ class User extends Authenticatable
     protected $casts = [
         'tipo' => TipoUsuario::class,
         'password' => 'hashed',
+        'data_nascimento' => 'date', // <--- Adicionado
     ];
 
     // Relacionamento: Usuário (Aluno/Coordenador) pertence a um Curso
