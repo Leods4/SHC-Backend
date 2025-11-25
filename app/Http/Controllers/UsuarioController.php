@@ -11,8 +11,6 @@ use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\ProgressoResource;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Gate;
-use Carbon\Carbon;
 
 class UsuarioController extends Controller
 {
@@ -34,21 +32,11 @@ class UsuarioController extends Controller
 
     /**
      * Cria usuário
-     * Agora usando StoreUsuarioRequest + senha padrão baseada em data_nascimento
+     * Agora senha é autogerada pelo Model caso data_nascimento esteja presente
      */
     public function store(StoreUsuarioRequest $request)
     {
         $data = $request->validated();
-
-        // Gerar senha padrão se estiver vazia
-        if (empty($data['password'])) {
-            $dataNascimento = Carbon::parse($data['data_nascimento']);
-            $senhaPadrao = $dataNascimento->format('dmY'); // ex: 25082001
-
-            // Será hasheado automaticamente pelo cast 'password' => 'hashed'
-            $data['password'] = $senhaPadrao;
-        }
-
         $user = User::create($data);
 
         return new UserResource($user);
@@ -79,8 +67,6 @@ class UsuarioController extends Controller
      */
     public function getProgresso(User $user)
     {
-        // Gate 'view-progresso' já aplicado na rota
-
         $totalAprovadas = $user->certificadosSubmetidos()
             ->whereIn('status', [
                 StatusCertificado::APROVADO,
