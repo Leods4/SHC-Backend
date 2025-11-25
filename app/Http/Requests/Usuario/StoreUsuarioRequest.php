@@ -19,12 +19,19 @@ class StoreUsuarioRequest extends FormRequest
         return [
             'nome' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users'],
-            'cpf' => ['required', 'string', 'max:14', 'unique:users'], // Formato 000.000.000-00
+            'cpf' => ['required', 'string', 'max:14', 'unique:users'],
+
+            // Nova regra
+            'data_nascimento' => ['required', 'date'],
+
             'matricula' => ['nullable', 'string', 'unique:users'],
-            'password' => ['required', 'string', 'min:6'], // Senha inicial
+
+            // Mudança: senha opcional
+            'password' => ['nullable', 'string', 'min:6'],
+
             'tipo' => ['required', Rule::enum(TipoUsuario::class)],
 
-            // Condicionais: Curso e Fase são obrigatórios se for ALUNO
+            // Curso e Fase obrigatórios apenas para ALUNO
             'curso_id' => [
                 'nullable',
                 'exists:cursos,id',
