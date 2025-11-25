@@ -7,6 +7,8 @@ use App\Models\Configuracao;
 use App\Models\Curso;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,47 +27,62 @@ class DatabaseSeeder extends Seeder
 
         // 2. Admin
         User::create([
-            'nome' => 'Administrador do Sistema',
-            'email' => 'admin@fmp.edu.br',
-            'cpf' => '000.000.000-00',
+            'nome'         => 'Administrador do Sistema',
+            'email'        => 'admin@fmp.edu.br',
+            'cpf'          => '000.000.000-00',
             'data_nascimento' => '1990-01-01',
-            'password' => 'admin123',
-            'tipo' => TipoUsuario::ADMINISTRADOR,
+            'password'     => Hash::make('admin123'),
+            'tipo'         => TipoUsuario::ADMINISTRADOR,
         ]);
 
         // 3. Secretaria
         User::create([
-            'nome' => 'Secretaria Acadêmica',
-            'email' => 'secretaria@fmp.edu.br',
-            'cpf' => '111.111.111-11',
+            'nome'         => 'Secretaria Acadêmica',
+            'email'        => 'secretaria@fmp.edu.br',
+            'cpf'          => '111.111.111-11',
             'data_nascimento' => '1992-05-10',
-            'password' => 'sec123',
-            'tipo' => TipoUsuario::SECRETARIA,
+            'password'     => Hash::make('sec123'),
+            'tipo'         => TipoUsuario::SECRETARIA,
         ]);
 
         // 4. Coordenador (ADS)
         User::create([
-            'nome' => 'Coordenador ADS',
-            'email' => 'coord.ads@fmp.edu.br',
-            'cpf' => '222.222.222-22',
+            'nome'         => 'Coordenador ADS',
+            'email'        => 'coord.ads@fmp.edu.br',
+            'cpf'          => '222.222.222-22',
             'data_nascimento' => '1985-08-20',
-            'password' => 'coord123',
-            'tipo' => TipoUsuario::COORDENADOR,
-            'curso_id' => $cursoAds->id,
+            'password'     => Hash::make('coord123'),
+            'tipo'         => TipoUsuario::COORDENADOR,
+            'curso_id'     => $cursoAds->id,
         ]);
 
-        // 5. Aluno
+        // 5. Aluno com senha própria
         User::create([
-            'nome' => 'Aluno Teste',
-            'email' => 'aluno@fmp.edu.br',
-            'cpf' => '333.333.333-33',
+            'nome'         => 'Aluno Teste',
+            'email'        => 'aluno@fmp.edu.br',
+            'cpf'          => '333.333.333-33',
             'data_nascimento' => '2003-04-15',
-            'matricula' => '20250001',
-            'password' => 'aluno123',
-            'tipo' => TipoUsuario::ALUNO,
-            'avatar_url' => 'https://ui-avatars.com/api/?name=Aluno+Teste',
-            'curso_id' => $cursoAds->id,
-            'fase' => 3,
+            'matricula'    => '20250001',
+            'password'     => Hash::make('aluno123'),
+            'tipo'         => TipoUsuario::ALUNO,
+            'avatar_url'   => 'https://ui-avatars.com/api/?name=Aluno+Teste',
+            'curso_id'     => $cursoAds->id,
+            'fase'         => 3,
+        ]);
+
+        // 5b. Aluno sem senha → cria senha padrão ddmmaaaa
+        $data = Carbon::parse('2004-02-13')->format('dmY'); // "13022004"
+
+        User::create([
+            'nome'            => 'Aluno Sem Senha',
+            'email'           => 'aluno2@fmp.edu.br',
+            'cpf'             => '444.444.444-44',
+            'data_nascimento' => '2004-02-13',
+            'matricula'       => '20250002',
+            'password'        => Hash::make($data), // <--- senha default gerada
+            'tipo'            => TipoUsuario::ALUNO,
+            'curso_id'        => $cursoAds->id,
+            'fase'            => 1,
         ]);
 
         // 6. Configurações iniciais
