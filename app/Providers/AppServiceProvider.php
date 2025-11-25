@@ -38,8 +38,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('is-aluno', fn (User $user) => $user->isAluno());
 
         // Gates de Ação
-        Gate::define('manage-users', fn (User $user) => $user->isAdmin() || $user->isSecretaria());
-        Gate::define('view-all-history', fn (User $user) => $user->isAdmin() || $user->isSecretaria());
+        Gate::define('manage-users', fn (User $user) => $user->isAdmin() || $user->isSecretaria() || $user->isCoordenador());
+        Gate::define('view-all-history', fn (User $user) => $user->isAdmin() || $user->isSecretaria() || $user->isCoordenador());
 
         // Gates de Nível de Recurso
         Gate::define('avaliar-certificado', function (User $coordenador, $certificado) {
