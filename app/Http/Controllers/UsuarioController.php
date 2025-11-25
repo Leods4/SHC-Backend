@@ -6,21 +6,25 @@ use App\Enums\StatusCertificado;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Usuario\StoreUsuarioRequest;
+use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\ProgressoResource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Gate;
+use Carbon\Carbon;
 
 class UsuarioController extends Controller
 {
-    // [cite: 43]
+    /**
+     * Lista usuários
+     */
     public function index(Request $request)
     {
-        // Gate 'manage-users' (Admin/Secretaria) já foi aplicado na rota
-
+        // Gate 'manage-users' já aplicado na rota (Admin / Secretaria)
         $query = User::query()->with('curso');
 
-        // [cite: 43] Filtro por tipo
+        // Filtro por tipo
         if ($request->has('tipo')) {
             $query->where('tipo', $request->tipo);
         }
@@ -28,55 +32,60 @@ class UsuarioController extends Controller
         return UserResource::collection($query->get());
     }
 
-    // [cite: 43]
-    public function store(Request $request) // (Usar um StoreUsuarioRequest para validar)
+    /**
+     * Cria usuário
+     * Agora usando StoreUsuarioRequest + senha padrão baseada em data_nascimento
+     */
+    public function store(StoreUsuarioRequest $request)
     {
-        // Validar dados (nome, email, cpf, tipo, curso_id, fase, password) [cite: 49]
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'cpf' => 'required|string|unique:users,cpf',
-            'password' => 'required|string|min:8',
-            'tipo' => 'required|string', // Usar 'new Enum(TipoUsuario::class)'
-            'curso_id' => 'nullable|exists:cursos,id',
-            'fase' => 'nullable|integer',
-        ]);
+        $data = $request->validated();
 
-        $user = User::create($validated);
+        // Gerar senha padrão se estiver vazia
+        if (empty($data['password'])) {
+            $dataNascimento = Carbon::parse($data['data_nascimento']);
+            $senhaPadrao = $dataNascimento->format('dmY'); // ex: 25082001
+
+            // Será hasheado automaticamente pelo cast 'password' => 'hashed'
+            $data['password'] = $senhaPadrao;
+        }
+
+        $user = User::create($data);
+
         return new UserResource($user);
     }
 
-    // [cite: 44]
-    public function update(Request $request, User $user) // (Usar um UpdateUsuarioRequest)
+    /**
+     * Atualiza usuário
+     */
+    public function update(UpdateUsuarioRequest $request, User $user)
     {
-        // Validar dados (similar ao store, mas 'email' e 'cpf' unique ignorando $user->id)
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'tipo' => 'required|string',
-            'curso_id' => 'nullable|exists:cursos,id',
-            'fase' => 'nullable|integer',
-            // Não atualizar CPF ou Senha por aqui
-        ]);
-
+        $validated = $request->validated();
         $user->update($validated);
+
         return new UserResource($user);
     }
 
-    // [cite: 45]
+    /**
+     * Remove usuário
+     */
     public function destroy(User $user)
     {
         $user->delete();
         return response()->noContent();
     }
 
-    // [cite: 32]
+    /**
+     * Retorna progresso do aluno
+     */
     public function getProgresso(User $user)
     {
-        // Gate 'view-progresso' já foi aplicado na rota
+        // Gate 'view-progresso' já aplicado na rota
 
         $totalAprovadas = $user->certificadosSubmetidos()
-            ->whereIn('status', [StatusCertificado::APROVADO, StatusCertificado::APROVADO_COM_RESSALVAS])
+            ->whereIn('status', [
+                StatusCertificado::APROVADO,
+                StatusCertificado::APROVADO_COM_RESSALVAS
+            ])
             ->sum('horas_validadas');
 
         $horasNecessarias = $user->curso->horas_necessarias ?? 0;
@@ -87,23 +96,28 @@ class UsuarioController extends Controller
         ]);
     }
 
-    // [cite: 55]
+    /**
+     * Atualiza avatar do usuário logado
+     */
     public function updateAvatar(Request $request)
     {
         $request->validate([
-            'avatar' => ['required', 'image', 'max:2048'], // 2MB Imagem
+            'avatar' => ['required', 'image', 'max:2048'],
         ]);
 
         $user = Auth::user();
 
-        // Deleta avatar antigo
+        // Remove avatar antigo
         if ($user->avatar_url) {
             Storage::disk('public')->delete($user->avatar_url);
         }
 
+        // Salva novo
         $path = $request->file('avatar')->store('avatars', 'public');
         $user->update(['avatar_url' => $path]);
 
-        return response()->json(['avatar_url' => Storage::url($path)]);
+        return response()->json([
+            'avatar_url' => Storage::url($path)
+        ]);
     }
 }
