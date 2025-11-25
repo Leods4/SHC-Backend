@@ -18,13 +18,12 @@ class UpdateUsuarioRequest extends FormRequest
             return true;
         }
 
-        // O próprio usuário pode editar o próprio perfil (Perfil Self-Service)
+        // O próprio usuário pode editar o próprio perfil
         return $user->id === $targetUserId;
     }
 
     public function rules(): array
     {
-        // ID do usuário sendo atualizado
         $userId = $this->route('user')->id;
 
         return [
@@ -34,23 +33,26 @@ class UpdateUsuarioRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users')->ignore($userId)
+                Rule::unique('users')->ignore($userId),
             ],
 
             'cpf' => [
                 'required',
                 'string',
                 'max:14',
-                Rule::unique('users')->ignore($userId)
+                Rule::unique('users')->ignore($userId),
             ],
 
             'matricula' => [
                 'nullable',
                 'string',
-                Rule::unique('users')->ignore($userId)
+                Rule::unique('users')->ignore($userId),
             ],
 
-            // Senha é opcional — usada apenas se o usuário quiser alterar
+            // ➜ Campo novo
+            'data_nascimento' => ['required', 'date'],
+
+            // Senha opcional
             'password' => ['nullable', 'string', 'min:6'],
 
             'tipo' => ['required', Rule::enum(TipoUsuario::class)],
