@@ -7,7 +7,6 @@ use App\Models\Configuracao;
 use App\Models\Curso;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -24,52 +23,56 @@ class DatabaseSeeder extends Seeder
             'horas_necessarias' => 300
         ]);
 
-        // 2. Criar Administrador
+        // 2. Admin
         User::create([
             'nome' => 'Administrador do Sistema',
             'email' => 'admin@fmp.edu.br',
             'cpf' => '000.000.000-00',
-            'password' => Hash::make('admin123'),
+            'data_nascimento' => '1990-01-01',
+            'password' => 'admin123',
             'tipo' => TipoUsuario::ADMINISTRADOR,
         ]);
 
-        // 3. Criar Secretaria
+        // 3. Secretaria
         User::create([
             'nome' => 'Secretaria Acadêmica',
             'email' => 'secretaria@fmp.edu.br',
             'cpf' => '111.111.111-11',
-            'password' => Hash::make('sec123'),
+            'data_nascimento' => '1992-05-10',
+            'password' => 'sec123',
             'tipo' => TipoUsuario::SECRETARIA,
         ]);
 
-        // 4. Criar Coordenador (ADS)
+        // 4. Coordenador (ADS)
         User::create([
             'nome' => 'Coordenador ADS',
             'email' => 'coord.ads@fmp.edu.br',
             'cpf' => '222.222.222-22',
-            'password' => Hash::make('coord123'),
+            'data_nascimento' => '1985-08-20',
+            'password' => 'coord123',
             'tipo' => TipoUsuario::COORDENADOR,
             'curso_id' => $cursoAds->id,
         ]);
 
-        // 5. Criar Aluno
+        // 5. Aluno
         User::create([
             'nome' => 'Aluno Teste',
             'email' => 'aluno@fmp.edu.br',
             'cpf' => '333.333.333-33',
+            'data_nascimento' => '2003-04-15',
             'matricula' => '20250001',
-            'password' => Hash::make('aluno123'),
+            'password' => 'aluno123',
             'tipo' => TipoUsuario::ALUNO,
             'avatar_url' => 'https://ui-avatars.com/api/?name=Aluno+Teste',
             'curso_id' => $cursoAds->id,
-            'fase' => 3, // exemplo: fase do curso
+            'fase' => 3,
         ]);
 
-        // 6. Configurações Iniciais
+        // 6. Configurações iniciais
         Configuracao::create(['chave' => 'modo_manutencao', 'valor' => 'false']);
         Configuracao::create(['chave' => 'total_horas_padrao', 'valor' => '200']);
 
-        // 7. Categorias Iniciais
+        // 7. Categorias
         $categorias = [
             'Curso Extracurricular',
             'Participação em Eventos/Palestras',
