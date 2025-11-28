@@ -42,17 +42,20 @@ class AuthController extends Controller
     }
 
     // [cite: 56]
-    public function changePassword(Request $request) // (Usar um ChangePasswordRequest para validar)
+    public function changePassword(Request $request) 
     {
         $user = $request->user();
 
-        // Validar 'current_password', 'password' (confirmed)
+        // Validação
         $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user->update(['password' => $request->password]);
+        // CORREÇÃO: Adicionado Hash::make() para criptografar a senha
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
 
         return response()->noContent();
     }
