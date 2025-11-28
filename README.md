@@ -119,12 +119,17 @@ Regras de Edição:
 - Senha → /auth/change-password  
 - Avatar → /usuarios/avatar  
 
+Nota sobre Criação (POST):
+
+O campo password é opcional. Se não enviado, a senha inicial será a data_nascimento formatada apenas com números (ex: 25122000).
 
 Payload exemplo:
 ```
 {
   "nome": "João Silva Editado",
   "email": "joao.novo@email.com",
+  "cpf": "000.111.222-33",
+  "data_nascimento": "2000-12-25",  // Obrigatório (Formato YYYY-MM-DD)
   "tipo": "ALUNO",
   "curso_id": 1,
   "fase": 6
@@ -138,12 +143,15 @@ Modelo de retorno:
   "id": 1,
   "nome": "João Silva",
   "email": "joao@email.com",
+  "cpf": "000.111.222-33",
+  "data_nascimento": "2000-12-25",
   "tipo": "ALUNO",
   "curso": {
     "id": 1,
     "nome": "Direito"
   },
-  "fase": 5
+  "fase": 5,
+  "avatar_url": "http://localhost:8000/storage/avatars/exemplo.jpg"
 }
 ```
 
@@ -162,13 +170,14 @@ Modelo de retorno:
    Authorization: Bearer {token}
 ```
    {
-     "nome": "Maria Souza Alterado",
-     "email": "maria@email.com",
-     "tipo": "ALUNO",
-     "curso_id": 3,
-     "fase": 4
+  "nome": "Maria Souza Alterado",
+  "email": "maria@email.com",
+  "data_nascimento": "1998-05-20",
+  "tipo": "ALUNO",
+  "curso_id": 3,
+  "fase": 4
    }
-   ```
+```
 
 ---
 ### 7. CONFIGURAÇÕES E CURSOS
