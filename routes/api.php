@@ -79,4 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/categorias', [CategoriaController::class, 'store'])->middleware('can:is-admin');
     Route::delete('/categorias/{categoria}', [CategoriaController::class, 'destroy'])->middleware('can:is-admin');
 
+    // Rota Exclusiva de Importação (Admin)
+    Route::post('/usuarios/import', [UsuarioController::class, 'import'])->middleware('can:is-admin');
 });
