@@ -42,7 +42,7 @@ POST     | /auth/change-password | Altera senha                        | Autenti
 ----------------------------------------------------------------
 
 Exemplo payload:
-```
+```json
 {
   "cpf": "000.000.000-00",
   "password": "senha_secreta"
@@ -90,7 +90,7 @@ carga_horaria_solicitada (int)
 arquivo (.pdf, até 10MB)
 
 #### Payload — Avaliação do Coordenador
-```
+```json
 {
   "status": "APROVADO",
   "horas_validadas": 10,
@@ -124,7 +124,7 @@ Nota sobre Criação (POST):
 O campo password é opcional. Se não enviado, a senha inicial será a data_nascimento formatada apenas com números (ex: 25122000).
 
 Payload exemplo:
-```
+```json
 {
   "nome": "João Silva Editado",
   "email": "joao.novo@email.com",
@@ -138,7 +138,7 @@ Payload exemplo:
 
 
 Modelo de retorno:
-```
+```json
 {
   "id": 1,
   "nome": "João Silva",
@@ -168,7 +168,7 @@ Modelo de retorno:
 3. Aluno editando seus dados:
    PUT /api/usuarios/10
    Authorization: Bearer {token}
-```
+```json
    {
   "nome": "Maria Souza Alterado",
   "email": "maria@email.com",
@@ -198,7 +198,7 @@ DELETE   | /cursos/{id}      | Remove curso (se sem alunos)   | Admin
 
 
 Payload Exemplo (JSON):
-```
+```json
 {
     "nome": "Engenharia de Software",
     "horas_necessarias": 250
@@ -227,7 +227,7 @@ Erros comuns:
 - 422 → Erro de validação
 
 Exemplo 422:
-```
+```json
 {
   "message": "The given data was invalid.",
   "errors": {
@@ -250,7 +250,7 @@ DELETE   | /categorias/{id} | Remove uma categoria.                 | Admin
 ### 11. AUDIT — TABELA DE ALTERACOES (User e Certificado)
 Usa observers para registrar alteracoes na tabela audit.
 #### Exemplo — Coordenador aprova um certificado.
-```
+```json
 {
   "id": 105,
   "user_id": 2, // ID do Coordenador
@@ -267,5 +267,59 @@ Usa observers para registrar alteracoes na tabela audit.
   },
   "ip_address": "192.168.1.15",
   "created_at": "2025-11-25 10:30:00"
+}
+```
+
+### 11. Importação de Usuários
+
+Endpoint administrativo para criar ou atualizar usuários em lote via JSON.
+
+**Endpoint**
+- **POST** `/usuarios/import` — Importa ou atualiza usuários. (Permissão: Admin)
+
+**Regras Principais**
+1. **Identificação por CPF**  
+   - CPF existente → atualiza.  
+   - CPF novo → cria usuário.
+
+2. **Senhas**  
+   - `password` vazio → usa `data_nascimento` (formato `dmY`).  
+   - Texto simples → sistema aplica hash.  
+   - Hash começando com `$2y$` → mantido (útil para migração).
+
+**Payload**
+- Objeto contendo `usuarios` (lista de objetos).
+- Headers: `Content-Type: application/json` e `Authorization: Bearer {token_admin}`.
+
+**Exemplo**
+```json
+{
+  "usuarios": [
+    {
+      "nome": "Novo Aluno Exemplo",
+      "email": "aluno.novo@fmp.edu.br",
+      "cpf": "123.456.789-00",
+      "data_nascimento": "2000-05-20",
+      "tipo": "ALUNO",
+      "curso_id": 1,
+      "fase": 1,
+      "matricula": "2024001"
+    },
+    {
+      "nome": "Professor Coordenador",
+      "email": "coord@fmp.edu.br",
+      "cpf": "999.888.777-66",
+      "tipo": "COORDENADOR",
+      "curso_id": 2,
+      "password": "senha_segura_personalizada"
+    }
+  ]
+}
+```
+
+**Resposta**
+```json
+{
+  "message": "Importação concluída. 2 usuários processados."
 }
 ```
