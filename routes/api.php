@@ -58,8 +58,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/configuracoes', [ConfiguracaoController::class, 'index'])->middleware('can:is-admin');
     Route::put('/configuracoes', [ConfiguracaoController::class, 'update'])->middleware('can:is-admin');
 
-    // 2.5. Cursos (Recurso auxiliar para formulários)
+    // 2.5. Cursos
+    // (Leitura: Disponível para selects em formulários de qualquer usuário)
     Route::get('/cursos', [CursoController::class, 'index']);
+
+    // (Gestão: Restrita ao Administrador)
+    Route::post('/cursos', [CursoController::class, 'store'])->middleware('can:is-admin');
+
+    Route::prefix('cursos/{curso}')->scopeBindings()->group(function () {
+        Route::get('/', [CursoController::class, 'show']); // Ver detalhes
+        Route::put('/', [CursoController::class, 'update'])->middleware('can:is-admin');
+        Route::delete('/', [CursoController::class, 'destroy'])->middleware('can:is-admin');
+    });
 
     // 2.6. Categorias (Novo)
     // Listagem aberta para todos os usuários logados (para popular selects)
