@@ -183,14 +183,27 @@ Modelo de retorno:
 ### 7. CONFIGURAÇÕES E CURSOS
 
 
-TABELA — Endpoints de Configurações
+TABELA — Endpoints de Configurações e Cursos
 ------------------------------------------------------------
-Método   | Endpoint         | Descrição                 | Acesso
----------|-------------------|----------------------------|--------
-GET      | /configuracoes   | Retorna regras do sistema | Admin
-PUT      | /configuracoes   | Atualiza regras           | Admin
-GET      | /cursos          | Lista cursos              | Autenticado
+Método   | Endpoint         | Descrição                      | Acesso
+---------|-------------------|--------------------------------|-----------
+GET      | /configuracoes    | Retorna regras do sistema      | Admin
+PUT      | /configuracoes    | Atualiza regras                | Admin
+GET      | /cursos           | Lista cursos                   | Autenticado
+POST     | /cursos           | Cria um novo curso             | Admin
+GET      | /cursos/{id}      | Vê detalhes de um curso        | Autenticado
+PUT      | /cursos/{id}      | Atualiza nome ou horas         | Admin
+DELETE   | /cursos/{id}      | Remove curso (se sem alunos)   | Admin
 ------------------------------------------------------------
+
+
+Payload Exemplo (JSON):
+```
+{
+    "nome": "Engenharia de Software",
+    "horas_necessarias": 250
+}
+```
 
 ### 8. DICIONÁRIO DE DADOS (ENUMS)
 
