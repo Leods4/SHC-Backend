@@ -34,6 +34,8 @@ return [
     */
 
     'allowed_origins' => [
+        'https://leods4.github.io',
+        'https://panoramic-figure-mushroom.ngrok-free.dev',
         'http://localhost:5500',
         'http://127.0.0.1:5500',
         'http://localhost:3000',
@@ -58,7 +60,7 @@ return [
     |
     */
 
-    'allowed_headers' => ['*', 'Authorization'],
+    'allowed_headers' => ['*', 'Authorization', 'ngrok-skip-browser-warning'],
 
     /*
     |--------------------------------------------------------------------------
